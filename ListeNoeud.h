@@ -1,23 +1,30 @@
 #ifndef _LIST_NOEUD
 #define _LIST_NOEUD
-
-typedef int Elem;
+#define MAX_VOISIN 3
+#define T_ADD 15
+#include <stdio.h>
+#include <stdlib.h>
+#include <limits.h>
+//typedef int Elem;
 typedef struct _Noeud
 {
-  char* addIp;
-  struct _Noeud *voisin;
+  int nb_voisin;
+  char * port;
+  char * add;
+  char voisin_direct[MAX_VOISIN][T_ADD];
 } Noeud;
 
-typedef struct _Liste
+/*typedef struct _Liste
 {
   Noeud *ad;
   int nb_noeud;
 } Liste;
-
-void initialialiserListe(Liste *l);
-void insertionDansliste(Liste *l, Noeud n);
-void rechercherDansListe(Liste *l, char * nameFile);
-void testamentListe(Liste *l);
+*/
+void initialialiserListe(Noeud *n, char * port, char* add );
+void insertionDansliste(Noeud *n);
+//void rechercherDansListe(Liste *l, char * nameFile);
+//void testamentNoeud(Noeud *l);
+int menuClient();
 
 
 
