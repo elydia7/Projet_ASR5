@@ -73,7 +73,7 @@ printf("Demo\n");
 	else{
 	  /*Dans le père*/
 	      
-	  //int res = waitpid(-1,&status, 0);
+	  int res = waitpid(-1,&status,WNOHANG );
 	      
 	}
       }
