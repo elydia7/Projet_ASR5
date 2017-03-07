@@ -10,11 +10,11 @@ int main(int argc, char *argv[]) {
   int server = 0;
   Noeud n;
   int s;
-   int fin=0;
-   int finS= 0;
-   int status;
-   int sock_attente;
-printf("Demo\n");
+  int fin=0;
+  int finS= 0;
+  int status;
+  int sock_attente;
+  printf("Demo\n");
   if (argc == 2) {
     // je suis le serveur (l'argument est le port)
     server = 1;
@@ -55,6 +55,7 @@ printf("Demo\n");
 	  exit(1);
 	else if(fils==0)
 	  {
+	       sleep(5);
 	    /*dans le fils*/
 	    // un message à envoyer
 	    const char *mess = " Telle est la réponse à la question ... ";
@@ -64,17 +65,37 @@ printf("Demo\n");
 	    EnvoieMessage(s, "TailleMessage:%16d", strlen(mess));
 	    // Envoie d'un second message avec le reste
 	    EnvoieMessage(s, mess);
-	    
-	    while(!fin){
+	 
+	    /*while(!fin){
 	      char buff[31];
 	      int r2 = recv(s, buff, 30, MSG_WAITALL);
-    	    }
+	      }*/
+	    
 	  }
 	else{
 	  /*Dans le père*/
-	      
-	  int res = waitpid(-1,&status,WNOHANG );
-	      
+	  int ok=0;
+	  while(!ok)
+	    { 
+	      int res = waitpid(-1,&status,0);
+	      if(res==-1)
+		{
+		  printf("erreur waitpid \n");
+		  exit(1);
+		}
+	      else if(res!=0)
+		{
+		  fprintf(stdout,"le processus vient de se terminer %d \n",res);
+		  if(WIFEXITED(status))
+		    {
+		      fprintf(stdout,"le fils a retourné %d \n ", WEXITSTATUS(status));
+		    }
+		}
+	      else
+		{
+	  		  ok=1;
+		}
+	    }  
 	}
       }
   } else {
@@ -90,21 +111,21 @@ printf("Demo\n");
     buff[r] = '\0';
     fprintf(stdout, "Le client à recu '%s'\n", buff);
 
-      // lecture de la taille du second message
-      int taille;
-      sscanf(buff, "TailleMessage:%16d", &taille);
-      // lecure de la suite du message
-      char buff2[taille];
-      r = recv(s, buff2, taille, MSG_WAITALL);
-      if (r == -1) {
-	perror("recv");
-      }
-    
-      // ecriture du message (comme un ensemble d'octet et pas comme une chaine de caractère)
-      write(STDOUT_FILENO, buff2, r);
-      fprintf(stdout, "\n");
-    
+    // lecture de la taille du second message
+    int taille;
+    sscanf(buff, "TailleMessage:%16d", &taille);
+    // lecure de la suite du message
+    char buff2[taille];
+    r = recv(s, buff2, taille, MSG_WAITALL);
+    if (r == -1) {
+      perror("recv");
     }
+    
+    // ecriture du message (comme un ensemble d'octet et pas comme une chaine de caractère)
+    write(STDOUT_FILENO, buff2, r);
+    fprintf(stdout, "\n");
+    
+  }
   //  }
    
 }
