@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <wait.h>
+
 int main(int argc, char *argv[]) {
   int server = 0;
   Noeud n;
@@ -14,7 +15,15 @@ int main(int argc, char *argv[]) {
   int finS= 0;
   int status;
   int sock_attente;
-  char requet[4][1024];
+  char add_client[4][20]={{0}};
+  n.nb_voisin=0;
+  socklen_t len;
+  struct sockaddr_storage addr;
+  char ipstr[INET6_ADDRSTRLEN];
+  int port;
+  
+   
+  
   //char h_name[NI_MAXHOST], s_name[NI_MAXSERV];
 
   printf("Demo\n");
@@ -36,12 +45,6 @@ int main(int argc, char *argv[]) {
     
     // création d'une socker et connexion
     s = CreeSocketClient(argv[1], argv[2]);
-    // initialiser mon Noeud avec ses cordonnées
-    initialialiserListe(&n,argv[2],argv[1]);
-    strcat(requet[0],n.add);
-    strcat(requet[0],n.port);
-    strcat(requet[0],"\0");
-    printf("add= %s port=%s %d \n",n.add, requet,strlen(requet[0]));
     
   } else {
     // il y a un problème car il manque d'argument
@@ -55,59 +58,87 @@ int main(int argc, char *argv[]) {
     while(!finS)
       {
 	//
-	s = AcceptConnexion(sock_attente);
-	++n.nb_voisin;
-	printf("nb voisin %d \n",n.nb_voisin);
-	printf("hhhh\n");
-	int fils= fork();
-	if(fils==-1)
-	  exit(1);
-	else if(fils==0)
-	  {
-	       sleep(5);
-	    /*dans le fils*/
-	    // un message à envoyer
-	    const char *mess = " Telle est la réponse à la question ... ";
+	if(n.nb_voisin<4){
 
-	    // Envoie d'un premier message avec la taille de la suite
-	    // e premier message fait 30 caractères
-	    EnvoieMessage(s, "TailleMessage:%16d", strlen(mess));
-	    // Envoie d'un second message avec le reste
-	    EnvoieMessage(s, mess);
-	 
-	    /*while(!fin){
-	      char buff[31];
-	      int r2 = recv(s, buff, 30, MSG_WAITALL);
-	      }*/
+	s = AcceptConnexion(sock_attente);
+	getpeername(s, (struct sockaddr*)&addr, &len);
+	  int fils= fork();
+	
+	  if(fils==-1)
+	    exit(1);
+	  else if(fils==0)
+	    {
+
+	   
+	      len = sizeof addr;
+	      getpeername(s, (struct sockaddr*)&addr, &len);
+
+	      // deal with both IPv4 and IPv6:
+	      if (addr.ss_family == AF_INET) {
+		struct sockaddr_in *s = (struct sockaddr_in *)&addr;
+		port = ntohs(s->sin_port);
+		inet_ntop(AF_INET, &s->sin_addr, ipstr, sizeof ipstr);
+	      } else { // AF_INET6
+		struct sockaddr_in6 *s = (struct sockaddr_in6 *)&addr;
+		port = ntohs(s->sin6_port);
+		inet_ntop(AF_INET6, &s->sin6_addr, ipstr, sizeof ipstr);
+	      }
+
+	      printf("Peer IP address: %s\n", ipstr);
+	      printf("Peer port      : %d\n", port);
+	     
+	      strcat( add_client[n.nb_voisin],ipstr);
+	      strcat( add_client[n.nb_voisin],"\0");
+	      printf("addresse %s\n", add_client[n.nb_voisin]);
+	      n.nb_voisin++;
+	      printf("nb voisin %d \n",n.nb_voisin);
 	    
+	      /*dans le fils*/
+	      // un message à envoyer
+	      const char *mess = " Telle est la réponse à la question ... ";
+
+	      // Envoie d'un premier message avec la taille de la suite
+	      // e premier message fait 30 caractères
+	      EnvoieMessage(s, "TailleMessage:%16d", strlen(mess));
+	      // Envoie d'un second message avec le reste
+	      EnvoieMessage(s, mess);
+	 
+	      /*while(!fin){
+		char buff[31];
+		int r2 = recv(s, buff, 30, MSG_WAITALL);
+		}*/
+	    
+	    }
+	  else{
+	    /*Dans le père*/
+	 
+	    int ok=0;
+	    while(!ok)
+	      { 
+		int res = waitpid(-1,&status,0);
+		if(res==-1)
+		  {
+		    printf("erreur waitpid \n");
+		    exit(1);
+		  }
+		else if(res!=0)
+		  {
+		    fprintf(stdout,"le processus vient de se terminer %d \n",res);
+		    if(WIFEXITED(status))
+		      {
+			fprintf(stdout,"le fils a retourné %d \n ", WEXITSTATUS(status));
+		      }
+		  }
+		else
+		  {
+		    ok=1;
+		  }
+	      }  
 	  }
-	else{
-	  /*Dans le père*/
-	  int ok=0;
-	  while(!ok)
-	    { 
-	      int res = waitpid(-1,&status,0);
-	      if(res==-1)
-		{
-		  printf("erreur waitpid \n");
-		  exit(1);
-		}
-	      else if(res!=0)
-		{
-		  fprintf(stdout,"le processus vient de se terminer %d \n",res);
-		  if(WIFEXITED(status))
-		    {
-		      fprintf(stdout,"le fils a retourné %d \n ", WEXITSTATUS(status));
-		    }
-		}
-	      else
-		{
-	  		  ok=1;
-		}
-	    }  
 	}
       }
   } else {
+    
     // while(!fin){
     char buff[31];
     //menuClient();

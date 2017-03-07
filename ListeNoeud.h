@@ -9,7 +9,7 @@
 typedef struct _Noeud
 {
   int nb_voisin;
-  char * port;
+  int port;
   char * add;
   char voisin_direct[MAX_VOISIN][T_ADD];
 } Noeud;
@@ -20,7 +20,7 @@ typedef struct _Noeud
   int nb_noeud;
 } Liste;
 */
-void initialialiserListe(Noeud *n, char * port, char* add );
+void initialialiserListe(Noeud *n, int port, char* add );
 void insertionDansliste(Noeud *n);
 //void rechercherDansListe(Liste *l, char * nameFile);
 //void testamentNoeud(Noeud *l);

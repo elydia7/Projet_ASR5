@@ -19,7 +19,7 @@ int menuClient()
   return i;
 }
 /*Initialisation du Noeud*/
-void initialialiserListe(Noeud *n, char * port, char* add){
+void initialialiserListe(Noeud *n, int port, char* add){
   n->nb_voisin=0;
   n->port=port;
   n->add=add;
