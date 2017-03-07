@@ -1,4 +1,4 @@
-/*Sow Mamadou*/
+/*Sow Mamadou  */
 #include "socklib.h"
 #include "ListeNoeud.h"
 #include <sys/types.h>
@@ -14,6 +14,9 @@ int main(int argc, char *argv[]) {
   int finS= 0;
   int status;
   int sock_attente;
+  char requet[4][1024];
+  //char h_name[NI_MAXHOST], s_name[NI_MAXSERV];
+
   printf("Demo\n");
   if (argc == 2) {
     // je suis le serveur (l'argument est le port)
@@ -35,7 +38,10 @@ int main(int argc, char *argv[]) {
     s = CreeSocketClient(argv[1], argv[2]);
     // initialiser mon Noeud avec ses cordonnées
     initialialiserListe(&n,argv[2],argv[1]);
-    printf("add= %s port=%s \n",n.add, n.port);
+    strcat(requet[0],n.add);
+    strcat(requet[0],n.port);
+    strcat(requet[0],"\0");
+    printf("add= %s port=%s %d \n",n.add, requet,strlen(requet[0]));
     
   } else {
     // il y a un problème car il manque d'argument
@@ -50,6 +56,9 @@ int main(int argc, char *argv[]) {
       {
 	//
 	s = AcceptConnexion(sock_attente);
+	++n.nb_voisin;
+	printf("nb voisin %d \n",n.nb_voisin);
+	printf("hhhh\n");
 	int fils= fork();
 	if(fils==-1)
 	  exit(1);
