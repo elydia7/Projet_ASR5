@@ -58,9 +58,10 @@ int main(int argc, char *argv[]) {
     while(!finS)
       {
 	//
-	if(n.nb_voisin<4){
+	
 
 	s = AcceptConnexion(sock_attente);
+	if(n.nb_voisin<4){
 	getpeername(s, (struct sockaddr*)&addr, &len);
 	  int fils= fork();
 	
@@ -135,37 +136,57 @@ int main(int argc, char *argv[]) {
 		  }
 	      }  
 	  }
-	}
+	}else
+	  {
+	    /*on renvois la liste des voisins dans les voisin*/
+	   
+             	    
+	    for(int i=0; i<4;i++){
+	      //printf("add_p %d =  %s\n",i,add_client[i]);
+	      if(send(s,(char*)&add_client[i],sizeof(add_client[i]),0)==SOCKET_ERROR)
+		{
+		  printf("echec transmission messages\n");
+		}
+	      else
+		printf("messages transmis!\n");
+	    }
+	    //printf("nombre client %d",sizeof(add_client)/sizeof(*add_client));
+	    
+	  }
       }
   } else {
+    char buff[20];
     
-    // while(!fin){
-    char buff[31];
-    //menuClient();
-    // lecure des 30 premiers caractères
-    int r = recv(s, buff, 30, MSG_WAITALL);
-    if (r == -1) {
-      perror("recv");
-    }
-    // J'ajoute le caractère de fin de chaine à la fin du message recu
-    buff[r] = '\0';
-    fprintf(stdout, "Le client à recu '%s'\n", buff);
+    while(!fin){
+      //menuClient();
+      // lecure des 30 premiers caractères
+      int r = recv(s, buff, 20, MSG_WAITALL);
+      if (r == -1) {
+	perror("recv");
+      }
+      fprintf(stdout, "Le client à recu '%s'\n", buff);
+      break;
+      //sleep(10);
+      
+      // J'ajoute le caractère de fin de chaine à la fin du message recu
+      /* buff[r] = '\0';
+	 fprintf(stdout, "Le client à recu '%s'\n", buff);*/
 
-    // lecture de la taille du second message
-    int taille;
-    sscanf(buff, "TailleMessage:%16d", &taille);
-    // lecure de la suite du message
-    char buff2[taille];
-    r = recv(s, buff2, taille, MSG_WAITALL);
-    if (r == -1) {
-      perror("recv");
-    }
+      // lecture de la taille du second message
+      /** int taille;
+      sscanf(buff, "TailleMessage:%16d", &taille);
+      // lecure de la suite du message
+      char buff2[taille];
+      r = recv(s, buff2, taille, MSG_WAITALL);
+      if (r == -1) {
+	perror("recv");
+      }
     
-    // ecriture du message (comme un ensemble d'octet et pas comme une chaine de caractère)
-    write(STDOUT_FILENO, buff2, r);
-    fprintf(stdout, "\n");
+      // ecriture du message (comme un ensemble d'octet et pas comme une chaine de caractère)
+      write(STDOUT_FILENO, buff2, r);
+      fprintf(stdout, "\n");*/
     
+      }//
   }
-  //  }
-   
+  return 0;
 }
