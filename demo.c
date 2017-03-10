@@ -96,13 +96,13 @@ int main(int argc, char *argv[]) {
 	    
 	      /*dans le fils*/
 	      // un message à envoyer
-	      const char *mess = " Telle est la réponse à la question ... ";
+	      //const char *mess = " Telle est la réponse à la question ... ";
 
 	      // Envoie d'un premier message avec la taille de la suite
 	      // e premier message fait 30 caractères
-	      EnvoieMessage(s, "TailleMessage:%16d", strlen(mess));
+	      //EnvoieMessage(s, "TailleMessage:%16d", strlen(mess));
 	      // Envoie d'un second message avec le reste
-	      EnvoieMessage(s, mess);
+	      //EnvoieMessage(s, mess);
 	 
 	      /*while(!fin){
 		char buff[31];
@@ -149,23 +149,28 @@ int main(int argc, char *argv[]) {
 		}
 	      else
 		printf("messages transmis!\n");
+	      	fprintf(stdout, "Le client à recu '%s' voisin = %d\n",add_client[0] , n.nb_voisin);
 	    }
-	    //printf("nombre client %d",sizeof(add_client)/sizeof(*add_client));
 	    
 	  }
       }
   } else {
-    char buff[20];
+    // char buff[20];
     
     while(!fin){
       //menuClient();
       // lecure des 30 premiers caractères
-      int r = recv(s, buff, 20, MSG_WAITALL);
-      if (r == -1) {
-	perror("recv");
+      if(n.nb_voisin<4){
+	int r = recv(s, (char*)&add_client[n.nb_voisin], sizeof(add_client[n.nb_voisin]), MSG_WAITALL);
+	if (r == -1) {
+	  perror("recv");
+	}
+	n.nb_voisin++;
+	//strcat( add_client[n.nb_voisin],buff);
+	//strcat( add_client[n.nb_voisin],"\0");
+	fprintf(stdout, "Le client à recu '%s' voisin = %d\n",add_client[0] , n.nb_voisin);
       }
-      fprintf(stdout, "Le client à recu '%s'\n", buff);
-      break;
+      //break;
       //sleep(10);
       
       // J'ajoute le caractère de fin de chaine à la fin du message recu
