@@ -93,6 +93,22 @@ int main(int argc, char *argv[]) {
 	      printf("addresse %s\n", add_client[n.nb_voisin]);
 	      n.nb_voisin++;
 	      printf("nb voisin %d \n",n.nb_voisin);
+
+	      /*On renvoi la liste des voisin*/
+	      if(n.nb_voisin > 1 )
+		{
+		  for(int i=0; i<n.nb_voisin;i++){
+		    //printf("add_p %d =  %s\n",i,add_client[i]);
+		    if(send(s,(char*)&add_client[i],sizeof(add_client[i]),0)==SOCKET_ERROR)
+		      {
+			printf("echec transmission messages\n");
+		      }
+		    else
+		      printf("messages transmis!\n");
+		    fprintf(stdout, "Le client à recu '%s' voisin = %d\n",add_client[i] , i);
+		  }
+		}
+	      
 	    
 	      /*dans le fils*/
 	      // un message à envoyer
