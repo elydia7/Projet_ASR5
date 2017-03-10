@@ -95,7 +95,7 @@ int main(int argc, char *argv[]) {
 	      printf("nb voisin %d \n",n.nb_voisin);
 
 	      /*On renvoi la liste des voisin*/
-	      if(n.nb_voisin > 1 )
+	      if(n.nb_voisin < 4 )
 		{
 		  for(int i=0; i<n.nb_voisin;i++){
 		    //printf("add_p %d =  %s\n",i,add_client[i]);
