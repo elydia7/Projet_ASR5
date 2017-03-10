@@ -149,7 +149,7 @@ int main(int argc, char *argv[]) {
 		}
 	      else
 		printf("messages transmis!\n");
-	      	fprintf(stdout, "Le client à recu '%s' voisin = %d\n",add_client[0] , n.nb_voisin);
+	      	fprintf(stdout, "Le client à recu '%s' voisin = %d\n",add_client[n.nb_voisin] , n.nb_voisin);
 	    }
 	    
 	  }
@@ -168,7 +168,7 @@ int main(int argc, char *argv[]) {
 	n.nb_voisin++;
 	//strcat( add_client[n.nb_voisin],buff);
 	//strcat( add_client[n.nb_voisin],"\0");
-	fprintf(stdout, "Le client à recu '%s' voisin = %d\n",add_client[0] , n.nb_voisin);
+	fprintf(stdout, "Le client à recu '%s' voisin = %d\n",add_client[n.nb_voisin] , n.nb_voisin);
       }
       //break;
       //sleep(10);
