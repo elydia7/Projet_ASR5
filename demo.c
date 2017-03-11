@@ -15,7 +15,8 @@ int main(int argc, char *argv[]) {
   int finS= 0;
   int status;
   int sock_attente;
-  char add_client[4][20]={{0}};
+  char add_client[4][23]={{0}};
+  char nouv_client[4][23]={{0}};
   n.nb_voisin=0;
   socklen_t len;
   struct sockaddr_storage addr;
@@ -25,8 +26,6 @@ int main(int argc, char *argv[]) {
    
   
   //char h_name[NI_MAXHOST], s_name[NI_MAXSERV];
-
-  printf("Demo\n");
   if (argc == 2) {
     // je suis le serveur (l'argument est le port)
     server = 1;
@@ -61,7 +60,7 @@ int main(int argc, char *argv[]) {
 	
 
 	s = AcceptConnexion(sock_attente);
-	if(n.nb_voisin<4){
+
 	getpeername(s, (struct sockaddr*)&addr, &len);
 	  int fils= fork();
 	
@@ -69,9 +68,8 @@ int main(int argc, char *argv[]) {
 	    exit(1);
 	  else if(fils==0)
 	    {
-
-	   
-	      len = sizeof addr;
+	      
+	       len = sizeof addr;
 	      getpeername(s, (struct sockaddr*)&addr, &len);
 
 	      // deal with both IPv4 and IPv6:
@@ -85,18 +83,19 @@ int main(int argc, char *argv[]) {
 		inet_ntop(AF_INET6, &s->sin6_addr, ipstr, sizeof ipstr);
 	      }
 
-	      printf("Peer IP address: %s\n", ipstr);
-	      printf("Peer port      : %d\n", port);
+	      //printf("Peer IP address: %s\n", ipstr);
+	      //printf("Peer port      : %d\n", port);
 	     
-	      strcat( add_client[n.nb_voisin],ipstr);
-	      strcat( add_client[n.nb_voisin],"\0");
-	      printf("addresse %s\n", add_client[n.nb_voisin]);
-	      n.nb_voisin++;
-	      printf("nb voisin %d \n",n.nb_voisin);
-
-	      /*On renvoi la liste des voisin*/
-	      if(n.nb_voisin < 4 )
+	      
+	      
+	      if(n.nb_voisin < 4)
 		{
+		   strcat( add_client[n.nb_voisin],"oui");
+		  strcat( add_client[n.nb_voisin],ipstr);
+		  strcat( add_client[n.nb_voisin],"\0");
+		  printf("addresse %s\n", add_client[n.nb_voisin]);
+		  (n.nb_voisin<4) ? n.nb_voisin++: n.nb_voisin ;
+		  //printf("nb voisin %d \n",n.nb_voisin);
 		  for(int i=0; i<n.nb_voisin;i++){
 		    //printf("add_p %d =  %s\n",i,add_client[i]);
 		    if(send(s,(char*)&add_client[i],sizeof(add_client[i]),0)==SOCKET_ERROR)
@@ -105,10 +104,33 @@ int main(int argc, char *argv[]) {
 		      }
 		    else
 		      printf("messages transmis!\n");
-		    fprintf(stdout, "Le client à recu '%s' voisin = %d\n",add_client[i] , i);
+		    //fprintf(stdout, "Le client à recu '%s' voisin = %d\n",add_client[i] , i);
 		  }
+		  
+		}
+	      else
+		{
+		  for(int i=0; i<n.nb_voisin;i++){
+		    //printf("add_p %d =  %s\n",i,add_client[i]);	    
+		    if(send(s,(char*)&add_client[i],sizeof(add_client[i]),0)==SOCKET_ERROR)
+		      {
+			printf("echec transmission messages\n");
+		      }
+		    else
+		      printf("messages transmis!\n");
+		    fprintf(stdout, "Le client à recu '%s' voisin = %d\n",add_client[i] , i);
+		   
+		  }
+		   close(s);
 		}
 	      
+	      
+	      
+		  
+		  
+	       
+	      /*On renvoi la liste des voisin*/
+	    
 	    
 	      /*dans le fils*/
 	      // un message à envoyer
@@ -116,9 +138,9 @@ int main(int argc, char *argv[]) {
 
 	      // Envoie d'un premier message avec la taille de la suite
 	      // e premier message fait 30 caractères
-	      //EnvoieMessage(s, "TailleMessage:%16d", strlen(mess));
+	      //  EnvoieMessage(s, "TailleMessage:%16d", strlen(mess));
 	      // Envoie d'un second message avec le reste
-	      //EnvoieMessage(s, mess);
+	      // EnvoieMessage(s, mess);
 	 
 	      /*while(!fin){
 		char buff[31];
@@ -151,42 +173,28 @@ int main(int argc, char *argv[]) {
 		    ok=1;
 		  }
 	      }  
-	  }
-	}else
-	  {
-	    /*on renvois la liste des voisins dans les voisin*/
-	   
-             	    
-	    for(int i=0; i<4;i++){
-	      //printf("add_p %d =  %s\n",i,add_client[i]);
-	      if(send(s,(char*)&add_client[i],sizeof(add_client[i]),0)==SOCKET_ERROR)
-		{
-		  printf("echec transmission messages\n");
-		}
-	      else
-		printf("messages transmis!\n");
-	      	fprintf(stdout, "Le client à recu '%s' voisin = %d\n",add_client[i] , i);
-	    }
-	    
-	  }
-      }
-  } else {
+	  }//fin dans le père
+	
+      } //fin serveur
+  } else {// dans le client
     // char buff[20];
-    
+    // insertion dans le reseau
     while(!fin){
-      //menuClient();
-      // lecure des 30 premiers caractères
-      if(n.nb_voisin<4){
+      int insert=0;
+      
+      if((n.nb_voisin<4)){
 	int r = recv(s, (char*)&add_client[n.nb_voisin], sizeof(add_client[n.nb_voisin]), MSG_WAITALL);
 	if (r == -1) {
 	  perror("recv");
 	}
 	
-	//strcat( add_client[n.nb_voisin],buff);
-	//strcat( add_client[n.nb_voisin],"\0");
+	
 	fprintf(stdout, "Le client à recu '%s' voisin = %d\n",add_client[n.nb_voisin] , n.nb_voisin);
 	n.nb_voisin++;
       }
+
+      //
+      
       //break;
       //sleep(10);
       
@@ -208,7 +216,7 @@ int main(int argc, char *argv[]) {
       write(STDOUT_FILENO, buff2, r);
       fprintf(stdout, "\n");*/
     
-      }//
-  }
+      }// fin fin
+  }//fin dans le client
   return 0;
 }
