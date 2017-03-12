@@ -26,7 +26,7 @@ void insertionDansliste(Noeud *n);
 //void testamentNoeud(Noeud *l);
 int menuClient();
 
-
-
-
+int taille_rapport(char* buffer,int index);
+char * extraire_sous_chaine(char* chaine, int taille, int index );
+void viderbuffer(char buff[], int taille);
 #endif

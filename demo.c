@@ -6,22 +6,28 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <wait.h>
-
+#define ORDER_RECH 1
+#define ORDER_TRANSF 2
+#define ORDER_QUIT 0
+#define ORDER_SUPP 3
 int main(int argc, char *argv[]) {
   int server = 0;
   Noeud n;
   int s;
-  int fin=0;
+  // int fin=0;
   int finS= 0;
   int status;
   int sock_attente;
+  char received_data[1024];
+  char send_data[1024];
   char add_client[4][23]={{0}};
   char nouv_client[4][23]={{0}};
+  // char prt_serveur[4][10]={{0}};
   n.nb_voisin=0;
   socklen_t len;
   struct sockaddr_storage addr;
   char ipstr[INET6_ADDRSTRLEN];
-  int port;
+ 
   
    
   
@@ -35,7 +41,7 @@ int main(int argc, char *argv[]) {
     if (sock_attente == -1) {
       exit(1);
     }
-
+   
     // attente du client
     
   } else if (argc == 3){
@@ -62,95 +68,102 @@ int main(int argc, char *argv[]) {
 	s = AcceptConnexion(sock_attente);
 
 	getpeername(s, (struct sockaddr*)&addr, &len);
-	  int fils= fork();
+	int fils= fork();
 	
-	  if(fils==-1)
-	    exit(1);
-	  else if(fils==0)
-	    {
-	      
-	       len = sizeof addr;
-	      getpeername(s, (struct sockaddr*)&addr, &len);
+	if(fils==-1)
+	  exit(1);
+	else if(fils==0)
+	  {
+	    int port; 
+	    len = sizeof addr;
+	    getpeername(s, (struct sockaddr*)&addr, &len);
 
-	      // deal with both IPv4 and IPv6:
-	      if (addr.ss_family == AF_INET) {
-		struct sockaddr_in *s = (struct sockaddr_in *)&addr;
-		port = ntohs(s->sin_port);
-		inet_ntop(AF_INET, &s->sin_addr, ipstr, sizeof ipstr);
-	      } else { // AF_INET6
-		struct sockaddr_in6 *s = (struct sockaddr_in6 *)&addr;
-		port = ntohs(s->sin6_port);
-		inet_ntop(AF_INET6, &s->sin6_addr, ipstr, sizeof ipstr);
-	      }
+	    // deal with both IPv4 and IPv6:
+	    if (addr.ss_family == AF_INET) {
+	      struct sockaddr_in *s = (struct sockaddr_in *)&addr;
+	      port = ntohs(s->sin_port);
+	      inet_ntop(AF_INET, &s->sin_addr, ipstr, sizeof ipstr);
+	    } else { // AF_INET6
+	      struct sockaddr_in6 *s = (struct sockaddr_in6 *)&addr;
+	      port = ntohs(s->sin6_port);
+	      inet_ntop(AF_INET6, &s->sin6_addr, ipstr, sizeof ipstr);
+	    }
 
-	      //printf("Peer IP address: %s\n", ipstr);
-	      //printf("Peer port      : %d\n", port);
+	    // printf("Peer IP address: %s\n", ipstr);
+	    //printf("Peer port      : %d\n", port);
 	     
 	      
 	      
-	      if(n.nb_voisin < 4)
-		{
-		   strcat( add_client[n.nb_voisin],"oui");
-		  strcat( add_client[n.nb_voisin],ipstr);
-		  strcat( add_client[n.nb_voisin],"\0");
-		  printf("addresse %s\n", add_client[n.nb_voisin]);
-		  (n.nb_voisin<4) ? n.nb_voisin++: n.nb_voisin ;
-		  //printf("nb voisin %d \n",n.nb_voisin);
-		  for(int i=0; i<n.nb_voisin;i++){
-		    //printf("add_p %d =  %s\n",i,add_client[i]);
-		    if(send(s,(char*)&add_client[i],sizeof(add_client[i]),0)==SOCKET_ERROR)
+	    if(n.nb_voisin < 4)
+	      {
+		strcat( add_client[n.nb_voisin],ipstr);
+		strcat( add_client[n.nb_voisin],"\0");
+		//printf("addresse %s\n", add_client[n.nb_voisin]);
+		(n.nb_voisin<4) ? n.nb_voisin++: n.nb_voisin ;
+		int nn = n.nb_voisin;
+		char buf[10] = "";
+		sprintf( buf , "%d" , nn );
+		send(s , buf , sizeof( buf ), 0 );	  
+		for(int i=0; i<n.nb_voisin;i++){
+		  if(send(s,(char*)&add_client[i],sizeof(add_client[i]),0)==SOCKET_ERROR)
+		    {
+		      printf("echec transmission messages\n");
+		    }
+		    
+		}
+		int fin2=0;
+		int menu;
+		int r = recv(s,received_data, 1024, MSG_WAITALL);
+		if (r == -1) {
+		  perror("recv");
+		}
+		char *taille  = extraire_sous_chaine(received_data, 0, 1 );
+		menu=atoi(taille);
+		while(!fin2)
+		  {    
+		    switch(menu)
 		      {
-			printf("echec transmission messages\n");
+		      case ORDER_QUIT:
+			viderbuffer(add_client[n.nb_voisin], 23);
+			printf("un client deconnecté \n");
+			     
+			close(s);
+			fin2=1;
+			break;
+		      case ORDER_RECH:
+			break;
+		      case ORDER_TRANSF:
+			break;
+		      case ORDER_SUPP:
+			break;
+		      default:
+			break;
 		      }
-		    else
-		      printf("messages transmis!\n");
-		    //fprintf(stdout, "Le client à recu '%s' voisin = %d\n",add_client[i] , i);
 		  }
 		  
-		}
-	      else
+	      }
+	    else
+	      {
+		/*******************si on a pas reussi à se connecter aus reseau*******************/ 
+		/*for(int i=0; i<n.nb_voisin;i++){
+		//printf("add_p %d =  %s\n",i,add_client[i]);	    
+		if(send(s,(char*)&add_client[i],sizeof(add_client[i]),0)==SOCKET_ERROR)
 		{
-		  for(int i=0; i<n.nb_voisin;i++){
-		    //printf("add_p %d =  %s\n",i,add_client[i]);	    
-		    if(send(s,(char*)&add_client[i],sizeof(add_client[i]),0)==SOCKET_ERROR)
-		      {
-			printf("echec transmission messages\n");
-		      }
-		    else
-		      printf("messages transmis!\n");
-		    fprintf(stdout, "Le client à recu '%s' voisin = %d\n",add_client[i] , i);
+		printf("echec transmission messages\n");
+		}
+		else
+		printf("messages transmis!\n");
+		fprintf(stdout, "Le client à recu '%s' voisin = %d\n",add_client[i] , i);
 		   
-		  }
-		   close(s);
 		}
-	      
-	      
-	      
-		  
-		  
-	       
-	      /*On renvoi la liste des voisin*/
-	    
-	    
-	      /*dans le fils*/
-	      // un message à envoyer
-	      //const char *mess = " Telle est la réponse à la question ... ";
-
-	      // Envoie d'un premier message avec la taille de la suite
-	      // e premier message fait 30 caractères
-	      //  EnvoieMessage(s, "TailleMessage:%16d", strlen(mess));
-	      // Envoie d'un second message avec le reste
-	      // EnvoieMessage(s, mess);
-	 
-	      /*while(!fin){
-		char buff[31];
-		int r2 = recv(s, buff, 30, MSG_WAITALL);
+		close(s);
 		}*/
-	    
-	    }
-	  else{
-	    /*Dans le père*/
+	      }
+	  }
+	else//Dans le père
+	  {
 	 
+	      
 	    int ok=0;
 	    while(!ok)
 	      { 
@@ -172,51 +185,85 @@ int main(int argc, char *argv[]) {
 		  {
 		    ok=1;
 		  }
-	      }  
+	      } //fin ok 
 	  }//fin dans le père
 	
       } //fin serveur
   } else {// dans le client
-    // char buff[20];
-    // insertion dans le reseau
-    while(!fin){
-      int insert=0;
-      
-      if((n.nb_voisin<4)){
-	int r = recv(s, (char*)&add_client[n.nb_voisin], sizeof(add_client[n.nb_voisin]), MSG_WAITALL);
-	if (r == -1) {
-	  perror("recv");
-	}
-	
-	
-	fprintf(stdout, "Le client à recu '%s' voisin = %d\n",add_client[n.nb_voisin] , n.nb_voisin);
-	n.nb_voisin++;
-      }
-
-      //
-      
-      //break;
-      //sleep(10);
-      
-      // J'ajoute le caractère de fin de chaine à la fin du message recu
-      /* buff[r] = '\0';
-	 fprintf(stdout, "Le client à recu '%s'\n", buff);*/
-
-      // lecture de la taille du second message
-      /** int taille;
-      sscanf(buff, "TailleMessage:%16d", &taille);
-      // lecure de la suite du message
-      char buff2[taille];
-      r = recv(s, buff2, taille, MSG_WAITALL);
+    // insertion dans le reseau  
+    char buf[10] = "";
+    recv(s , buf , sizeof buf , 0 );
+    sscanf( buf , "%d" , &n.nb_voisin );
+    printf("nn=%d\n",n.nb_voisin);
+    for(int i=0;i<n.nb_voisin;i++){
+      int r = recv(s, (char*)&nouv_client[i], sizeof(nouv_client[i]), MSG_WAITALL);
       if (r == -1) {
 	perror("recv");
       }
-    
-      // ecriture du message (comme un ensemble d'octet et pas comme une chaine de caractère)
-      write(STDOUT_FILENO, buff2, r);
-      fprintf(stdout, "\n");*/
-    
-      }// fin fin
+      fprintf(stdout, "Le client à recu '%s' voisin = %d\n",nouv_client[i] , i);
+    }
+    if(n.nb_voisin<4)
+      {
+	printf("%d\n", n.nb_voisin);
+	printf("vous est connecté au reseau\n et voila la liste de vos voisin\n");
+	strcpy(add_client[0],argv[1]);
+	printf("voisin 0 '%s' \n",add_client[0]);	
+	for(int i=1;i<n.nb_voisin;++i){
+	  strcpy(add_client[i],nouv_client[i]);
+	  printf("voisin %d '%s' \n",i,add_client[i]);	  
+	}
+	int fin2=0;
+	while(!fin2)
+	  {
+	      
+	    switch(menuClient())
+	      {
+	      case ORDER_QUIT:
+		viderbuffer(add_client[n.nb_voisin], 23);
+		if( send(s,"0\0",2, 0)<0)
+		  {
+		    perror("send");
+		    exit(1);
+		  }
+		printf("vous êtes deconnecté\n");
+		close(s);
+		fin2=1;
+		break;
+	      case ORDER_RECH:
+		break;
+	      case ORDER_TRANSF:
+		break;
+	      case ORDER_SUPP:
+		   
+	      default:
+		break;
+	      }
+	  }
+	  
+      }
+    else//nb voisin >4
+      {
+	close(s);
+	for(int i=0; i<4; ++i)
+	  {
+	    int fils= fork();
+	    
+	    if(fils==-1)
+	      exit(1);
+	    else if(fils==0)
+	      {
+		//dans le fils
+		s = CreeSocketClient(argv[i], argv[2]);
+		  
+	      }
+	    else
+	      {
+		//dans le père
+	      }
+	  
+	  }//fin for
+      }//end >4
+      
   }//fin dans le client
   return 0;
-}
+}//fin main
